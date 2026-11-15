@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>„Vektors” Dē apmeklējums</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f2ea; --paper:#fffdf8; --ink:#231c18; --muted:#7a6e66; --line:#e4dccf;
+    --red:#d7191f; --red-soft:#fbe0de; --green:#2f6b3a; --green-soft:#dcebdc;
+    --no:#a23a2e; --no-soft:#f6e1dc; --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Source Sans 3",system-ui,sans-serif}
+  header{background:var(--red);color:#fff;padding:28px 20px 22px;position:relative;overflow:hidden}
+  header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:8px;
+    background:repeating-linear-gradient(90deg,#fff 0 6px,transparent 6px 12px,#fff 12px 14px,transparent 14px 26px);opacity:.35}
+  .wrap{max-width:1100px;margin:0 auto}
+  h1{font:700 clamp(26px,5vw,38px)/1.1 "Source Serif 4",Georgia,serif;margin:0}
+  header p{margin:6px 0 0;opacity:.85}
+  nav{display:flex;gap:6px;margin:18px 0 0;flex-wrap:wrap}
+  nav button{border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;padding:8px 14px;border-radius:999px;font:500 14px "Source Sans 3",sans-serif;cursor:pointer}
+  nav button[aria-pressed=true]{background:#fff;color:var(--red)}
+  main{padding:20px}
+  .notice{font-size:13px;color:var(--muted);margin:0 0 14px}
+  .notice.warn{color:var(--no)}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  label.pick{display:block;font-weight:600;margin-bottom:6px}
+  select{font:16px "Source Sans 3",sans-serif;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#fff;min-width:min(100%,320px)}
+  h2.sec{font:700 20px "Source Serif 4",Georgia,serif;margin:26px 0 0;display:flex;align-items:baseline;gap:8px}
+  h2.sec small{font:500 13px "Source Sans 3",sans-serif;color:var(--muted)}
+  .empty{color:var(--muted);font-size:14px;margin-top:10px}
+  .events{display:grid;gap:12px;margin-top:16px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+  .ev{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px}
+  .ev.past{opacity:.7;background:#f9f6f0}
+  .ev .date{font:700 22px "Source Serif 4",Georgia,serif;color:var(--ink)}
+  .ev .title{font-weight:600}
+  .ev-toggle{cursor:pointer;display:flex;flex-direction:column;gap:8px;margin:-4px;padding:4px;border-radius:8px}
+  .ev-toggle:hover .chev{text-decoration:underline}
+  .placerow{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .chev{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap}
+  .program-h{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px}
+  .program ol{margin:0;padding-left:22px;font-size:15px;line-height:1.6}
+  .prog-btn{align-self:flex-start;border:1.5px solid var(--red);background:#fff;color:var(--red);border-radius:10px;padding:9px 14px;font:600 15px "Source Sans 3",sans-serif;cursor:pointer}
+  .prog-btn:hover{background:var(--red-soft)}
+  .prog-box{width:min(820px,100%);display:flex;flex-direction:column;max-height:90vh}
+  .prog-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .prog-head h3{margin:0 0 10px}
+  .prog-body{overflow:auto;font-size:15px;line-height:1.45}
+  .prog-body table{border-collapse:collapse;width:100%;font-size:14px}
+  .prog-body td,.prog-body th{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left;white-space:normal}
+  .prog-body tr.ours td{background:var(--red-soft)}
+  .prog-body tr.ours td strong,.prog-body tr.ours td b{color:var(--red)}
+  .prog-body p{margin:0 0 6px}
+  .ev-more{display:flex;flex-direction:column;gap:10px;border-top:1px dashed var(--line);padding-top:10px}
+  .ev .meta{font-size:13px;color:var(--muted)}
+  .tag{display:inline-block;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--muted);margin-left:6px;vertical-align:middle}
+  .choice{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .choice button{padding:12px;border-radius:10px;border:1.5px solid var(--line);background:#fff;font:600 15px "Source Sans 3",sans-serif;cursor:pointer;color:var(--ink)}
+  .choice button.yes[aria-pressed=true]{background:var(--green);border-color:var(--green);color:#fff}
+  .choice button.no[aria-pressed=true]{background:var(--no);border-color:var(--no);color:#fff}
+  .choice button:disabled{cursor:wait;opacity:.6}
+  .tally{font-size:13px;color:var(--muted)}
+  .tally b.y{color:var(--green)} .tally b.n{color:var(--no)}
+  .timetabs{display:contents}
+  nav .timetabs button{border-style:dashed}
+  nav .timetabs button[aria-pressed=true]{background:#fff3;border-style:solid;border-color:#fff;color:#fff;font-weight:600}
+  .timetabs .n{font-weight:500;opacity:.8}
+  .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .filters button{border:1px solid var(--line);background:var(--paper);padding:6px 12px;border-radius:999px;font:500 13px "Source Sans 3",sans-serif;cursor:pointer}
+  .filters button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .tablebox{overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);max-height:75vh}
+  table{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
+  th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+  thead th{position:sticky;top:0;background:var(--paper);z-index:2;vertical-align:bottom}
+  th.name,td.name{text-align:left;position:sticky;left:0;background:var(--paper);z-index:1}
+  thead th.name{z-index:3}
+  th .d{font:700 16px "Source Serif 4",Georgia,serif;color:var(--ink);display:block}
+  th .t{font-weight:500;font-size:12px;color:var(--muted);display:block;max-width:130px;margin:0 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  th .c{font-weight:500;font-size:12px;display:block;margin-top:4px}
+  th.past,td.past{opacity:.55}
+  tr.group td{background:#efe8dc;font-weight:600;text-align:left;position:sticky;left:0}
+  td.cell button{width:38px;height:30px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font:600 14px "Source Sans 3",sans-serif;color:var(--muted)}
+  td.cell button.tiek{background:var(--green-soft);border-color:#b7d3b9;color:var(--green)}
+  td.cell span.ro{display:inline-block;width:38px;height:30px;line-height:30px;border-radius:8px;font-weight:600;color:#c9bfb2}
+  td.cell span.ro.tiek{background:var(--green-soft);color:var(--green)}
+  td.cell span.ro.netiek{background:var(--no-soft);color:var(--no)}
+  td.cell button.netiek{background:var(--no-soft);border-color:#e6bdb4;color:var(--no)}
+  tbody tr:hover td{background:#faf5ec}
+  tbody tr.men td{background:#e8f1fb}
+  tbody tr.men:hover td{background:#dbe9f8}
+  tr.group.men td{background:#cfe1f5;color:#1f4e86}
+  .hint{font-size:12px;color:var(--muted);margin-top:8px}
+  [hidden]{display:none!important}
+  .ev .head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .kind{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--red-soft);color:var(--red)}
+  .kind.Mēģinājums{background:#e3e9f3;color:#2c4a7a}
+  .kind.Filmēšana{background:#efe3f2;color:#6a2f7a}
+  .kind.Cits{background:var(--line);color:var(--muted)}
+  .info{font-size:14px;white-space:pre-wrap;background:#faf6ee;border-left:3px solid var(--red-soft);padding:8px 10px;border-radius:6px}
+  details.more summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--red)}
+  details.more .info{margin-top:6px}
+  .edit-btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 10px;font:500 13px "Source Sans 3",sans-serif;cursor:pointer;color:var(--ink)}
+  .admin-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:16px}
+  .btn{border:none;background:var(--red);color:#fff;border-radius:10px;padding:10px 16px;font:600 15px "Source Sans 3",sans-serif;cursor:pointer}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .btn.danger{background:var(--no)}
+  .btn:disabled{opacity:.6;cursor:wait}
+  #asmember-bar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 14px;border-radius:999px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:40;display:flex;gap:10px;align-items:center;width:max-content;max-width:92vw}
+  #asmember-bar[hidden]{display:none}
+  #asmember-bar button{background:#fff;color:var(--ink);border:none;border-radius:999px;padding:5px 12px;font:600 13px "Source Sans 3",sans-serif;cursor:pointer}
+  footer{padding:10px 20px 40px;text-align:center}
+  footer button{background:none;border:none;color:var(--muted);font:13px "Source Sans 3",sans-serif;text-decoration:underline;cursor:pointer}
+  .modal{position:fixed;inset:0;background:rgba(35,28,24,.45);display:flex;align-items:flex-start;justify-content:center;padding:5vh 12px;z-index:50;overflow:auto}
+  .modal .box{background:var(--paper);border-radius:14px;padding:20px;width:min(520px,100%);box-shadow:0 20px 50px rgba(0,0,0,.25)}
+  .modal h3{font:700 22px "Source Serif 4",Georgia,serif;margin:0 0 14px}
+  .field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+  .field label{font-weight:600;font-size:14px}
+  .field input,.field textarea,.field select{font:16px "Source Sans 3",sans-serif;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;min-width:0;width:100%}
+  .field textarea{min-height:140px;resize:vertical}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .actions{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:6px}
+  .actions .right{display:flex;gap:8px}
+  .err{color:var(--no);font-size:14px;min-height:1em;margin:4px 0}
+  .muted{color:var(--muted);font-size:13px}
+  .link-btn{background:none;border:none;padding:0;color:var(--red);font:600 14px "Source Sans 3",sans-serif;cursor:pointer;text-align:left}
+  .mydances{font-size:14px}
+  .mydances b{color:var(--red)}
+  th a.evlink{color:inherit;text-decoration:none;display:block}
+  th a.evlink:hover .t{text-decoration:underline}
+  .back{margin:14px 0 4px}
+  .sum-head{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-top:8px}
+  .sum-head .date{font:700 28px "Source Serif 4",Georgia,serif;color:var(--ink)}
+  .sum-head h2{font:700 24px "Source Serif 4",Georgia,serif;margin:4px 0}
+  .att-cols{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:12px}
+  .att-col{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  .att-col h3{margin:0 0 8px;font:700 17px "Source Serif 4",Georgia,serif}
+  .att-col.y h3{color:var(--green)} .att-col.n h3{color:var(--no)} .att-col.z h3{color:var(--muted)}
+  .att-col h4{margin:10px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .att-col ul{margin:0;padding-left:18px;font-size:14px}
+  .dance-list{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+  .dance-row{display:flex;gap:6px;align-items:center}
+  .dance-row input{flex:1;font:15px "Source Sans 3",sans-serif;padding:7px 10px;border:1px solid var(--line);border-radius:8px}
+  .dance-row button,.sq{border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:14px}
+  .dance-row button.confirm{width:auto;padding:0 10px;background:var(--no);color:#fff;border-color:var(--no)}
+  .add-dance{display:flex;gap:8px}
+  .add-dance input{flex:1;font:16px "Source Sans 3",sans-serif;padding:9px 11px;border:1px solid var(--line);border-radius:9px}
+  table.cast th{white-space:normal;min-width:90px;max-width:140px;font-size:13px}
+  table.cast th .cnt{display:block;font-weight:500;color:var(--muted);font-size:12px;margin-top:3px}
+  table.cast td input{width:20px;height:20px;cursor:pointer;accent-color:var(--red)}
+  table.cast td.on{color:var(--red);font-weight:700}
+  table.cast tbody tr td.warn{background:#e2a59a!important}
+  table.cast tr.row-warn td{background:#f2cfc9!important;color:var(--no)}
+  table.cast tr.row-warn td.name{font-weight:600}
+  .replace-box{background:var(--no-soft);border:1px solid #e6bdb4;color:var(--no);border-radius:var(--radius);padding:12px 14px;margin:10px 0;font-size:14px}
+  .replace-box ul{margin:6px 0 0;padding-left:18px}
+  .st{display:inline-block;width:18px;text-align:center;font-weight:700}
+  .st.tiek{color:var(--green)} .st.netiek{color:var(--no)} .st.none{color:#c9bfb2}
+  .dance-cards{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));margin-top:10px}
+  .dance-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  .dance-card.mine{border-color:var(--red);box-shadow:inset 3px 0 0 var(--red)}
+  .dance-card h3{margin:0 0 6px;font:700 18px "Source Serif 4",Georgia,serif}
+  .dance-card h4{margin:10px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .dance-card h4.men{color:#1f4e86}
+  .dance-card ul{margin:0;padding-left:18px;font-size:15px;line-height:1.6}
+  .dance-card li.me{font-weight:700}
+  .dance-card li.out{color:var(--no)}
+  .outtag{font-size:12px;font-weight:600;background:var(--no-soft);border-radius:999px;padding:1px 8px;margin-left:4px;white-space:nowrap}
+  label.chk{display:inline-flex;gap:6px;align-items:center;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>„Vektors” Dē apmeklējums</h1>
+    <p>Mēģinājumi, koncerti un citi pasākumi — atzīmē, vai tiec</p>
+    <nav>
+      <button id="tab-me" aria-pressed="true">Mana atzīmēšanās</button>
+      <span class="timetabs" id="timetabs">
+        <button data-t="up" aria-pressed="true">Gaidāmie pasākumi <span class="n" id="n-up"></span></button>
+        <button data-t="past" aria-pressed="false">Aizvadītie pasākumi <span class="n" id="n-past"></span></button>
+      </span>
+      <button id="tab-all" aria-pressed="false">Kopskats</button>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <p class="notice" id="status">Ielādē…</p>
+
+  <div class="admin-bar" id="admin-bar" hidden>
+    <button class="btn" id="add-ev">+ Pievienot pasākumu</button>
+    <span class="muted">Vadītāja režīms ieslēgts — pie katra pasākuma ir poga „Labot”.</span>
+  </div>
+
+  <section id="view-me">
+    <div class="card" style="margin-top:14px">
+      <div id="who-pick">
+        <label class="pick" for="who">Kas tu esi?</label>
+        <select id="who"><option value="">— izvēlies savu vārdu —</option></select>
+      </div>
+      <div id="who-set" hidden>Tu atzīmējies kā <b id="who-name" style="font-size:17px"></b>
+        <span class="muted"> · Neesi Tu?</span> <button class="link-btn" id="who-change">Mainīt</button></div>
+    </div>
+    <div id="my-events"></div>
+  </section>
+
+  <section id="view-ev" hidden></section>
+
+  <section id="view-all" hidden>
+    <div class="filters" id="filters" style="margin-top:14px">
+      <button data-g="all" aria-pressed="true">Visi</button>
+      <button data-g="d" aria-pressed="false">Dāmas</button>
+      <button data-g="k" aria-pressed="false">Kungi</button>
+    </div>
+    <div class="tablebox"><table id="grid"></table></div>
+    <p class="hint" id="grid-hint"></p>
+  </section>
+</main>
+<footer><button id="admin-toggle">Vadītāja režīms</button> <span id="asmember-wrap" hidden>· <button id="asmember">Skatīt kā dalībnieks</button></span></footer>
+<div id="asmember-bar" hidden><span>👁 Dalībnieka skats</span> <button id="asmember-off">Atgriezties</button></div>
+
+<!-- Pasākuma labošanas logs -->
+<div class="modal" id="ev-modal" hidden>
+  <form class="box" id="ev-form">
+    <h3 id="ev-form-title">Jauns pasākums</h3>
+    <div class="row2">
+      <div class="field"><label for="f-date">Datums</label><input type="date" id="f-date" required></div>
+      <div class="field"><label for="f-time">Laiks</label><input type="text" id="f-time" placeholder="piem., 18:30"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label for="f-kind">Veids</label>
+        <select id="f-kind"><option>Koncerts</option><option>Mēģinājums</option><option>Filmēšana</option><option>Cits</option></select></div>
+      <div class="field"><label for="f-place">Vieta</label><input type="text" id="f-place" placeholder="piem., Limbaži"></div>
+    </div>
+    <div class="field"><label for="f-title">Nosaukums</label><input type="text" id="f-title" placeholder="piem., Ziemassvētku koncerts"></div>
+    <div class="field"><label for="f-info">Informācija</label>
+      <textarea id="f-info" placeholder="Ierašanās laiks, tērpi, repertuārs, transports, kontaktpersona…"></textarea></div>
+    <div class="field"><label for="f-prog">Programma (Word .docx)</label>
+      <input type="file" id="f-prog" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+      <div class="muted" id="prog-state"></div>
+      <button type="button" class="edit-btn" id="prog-remove" hidden style="align-self:flex-start">Noņemt programmu</button></div>
+    <p class="err" id="ev-err"></p>
+    <div class="actions">
+      <button type="button" class="btn danger" id="ev-del">Dzēst</button>
+      <div class="right">
+        <button type="button" class="btn ghost" id="ev-cancel">Atcelt</button>
+        <button type="submit" class="btn" id="ev-save">Saglabāt</button>
+      </div>
+    </div>
+    <div id="del-confirm" hidden style="margin-top:12px" class="card">
+      <p style="margin:0 0 10px">Tiešām dzēst šo pasākumu? Arī tā atzīmes vairs netiks rādītas.</p>
+      <button type="button" class="btn danger" id="ev-del-yes">Jā, dzēst</button>
+      <button type="button" class="btn ghost" id="ev-del-no">Nē</button>
+    </div>
+  </form>
+</div>
+
+<!-- Programmas skatītājs -->
+<div class="modal" id="prog-modal" hidden>
+  <div class="box prog-box">
+    <div class="prog-head"><h3 id="prog-title">Programma</h3><button class="btn ghost" id="prog-close">Aizvērt ✕</button></div>
+    <p class="muted" style="margin:-6px 0 10px">Iekrāsotas rindas — dejas, kurās dejo „Vektors” Dē.</p>
+    <div id="prog-body" class="prog-body"></div>
+  </div>
+</div>
+
+<!-- PIN logs -->
+<div class="modal" id="pin-modal" hidden>
+  <form class="box" id="pin-form">
+    <h3>Vadītāja režīms</h3>
+    <div class="field"><label for="f-pin">PIN kods</label><input type="password" id="f-pin" autocomplete="current-password" inputmode="numeric"></div>
+    <p class="err" id="pin-err"></p>
+    <div class="actions"><span></span><div class="right">
+      <button type="button" class="btn ghost" id="pin-cancel">Atcelt</button>
+      <button type="submit" class="btn">Ieiet</button>
+    </div></div>
+  </form>
+</div>
+
+<script>
+/* ====== Sākotnējie pasākumi (tiek izmantoti, kamēr nav saglabāts neviens cits) ====== */
+const DEFAULT_EVENTS = [
+  { id: "e20261107", date: "2026-11-07", time: "", kind: "Koncerts", title: "Koncerts", place: "RSU Aula", info: "", dances: [] },
+  { id: "e20261121", date: "2026-11-21", time: "", kind: "Koncerts", title: "Koncerts", place: "Limbaži", info: "", dances: [] },
+  { id: "e20261127", date: "2026-11-27", time: "", kind: "Filmēšana", title: "Filmēšana", place: "Jundari", info: "", dances: [] },
+];
+/* ====== Dalībnieki ====== */
+const MEMBERS = {
+  d: ["Ance Beinaroviča","Anete Bindemane","Diāna Rutks","Ieva Ozola","Ieva Auziņa","Ieva Lūkina","Ilze Seipule","Ilze Šimanska","Ingrīda Sorokina","Iveta Auziņa","Liene Vigule","Līna Puga","Linda Popena","Līva Zorgenfreija","Līva Kānīte","Santa Latkovska-Babre","Trīna Kļava","Zane Skrastiņa","Baiba Stikāne"],
+  k: ["Aldis Voitenko","Andris Broks","Andris Seipulis","Arvis Bērziņš","Didzis Lūkins","Edgars Krieviņš","Edgars Zēbergs","Emīls Ziediņš","Ģirts Patriks Kronbergs","Jānis Auziņš","Māris Auziņš","Māris Kānītis","Pēteris Puga","Rihards Kadiķis","Sergejs Ivanovs","Valters Skrastiņš","Gatis Šimanaskis","Arturs Jurgelāns","Krišjānis Kaminskis","Mārcis Kaksis"],
+};
+/* ==================================================================== */
+
+const KINDS = ["Koncerts","Mēģinājums","Filmēšana","Cits"];
+const GROUP_NAME = { d: "Dāmas", k: "Kungi" };
+const slug = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"").toLowerCase();
+const collator = new Intl.Collator("lv");
+const people = [];
+for (const g of ["d","k"]) [...MEMBERS[g]].sort(collator.compare).forEach(name=>people.push({ id: g + "-" + slug(name), name, g }));
+const byId = Object.fromEntries(people.map(p=>[p.id,p]));
+const key = (ev,m) => ev + "__" + m;
+const localToday = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const isPast = ev => ev.date < localToday();
+const MONTHS = ["janv.","febr.","marts","apr.","maijs","jūn.","jūl.","aug.","sept.","okt.","nov.","dec."];
+const DAYS = ["svētdiena","pirmdiena","otrdiena","trešdiena","ceturtdiena","piektdiena","sestdiena"];
+const fmtDate = d => { const [y,m,dd]=d.split("-").map(Number); return dd + ". " + MONTHS[m-1]; };
+const fmtDay = d => DAYS[new Date(d+"T12:00:00").getDay()];
+const esc = s => String(s ?? "").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const lvN = (n,one,many) => (n%10===1 && n%100!==11) ? one : many;
+const evTitle = ev => ev.title || ev.kind || "Pasākums";
+const cleanDances = ds => Array.isArray(ds) ? ds.filter(d=>d&&d.id).map(d=>({ id:String(d.id), name:String(d.name||""), cast:Array.isArray(d.cast)?d.cast.map(String).filter(x=>byId[x]):[] })) : [];
+const cleanEv = e => ({ id:String(e.id), date:String(e.date||""), time:String(e.time||""), kind:KINDS.includes(e.kind)?e.kind:"Cits", title:String(e.title||""), place:String(e.place||""), info:String(e.info||""), dances:cleanDances(e.dances),
+  program: e.program && typeof e.program.html==="string" && e.program.html ? { name:String(e.program.name||"Programma"), html:String(e.program.html) } : null });
+
+let state = {};              // atzīmes: key -> "tiek" | "netiek"
+let events = null;           // null = vēl nav saglabāti pasākumi -> rāda DEFAULT_EVENTS
+const pending = new Set();
+let group = "all", timeView = "up", admin = false, adminPin = "";
+const allEvents = () => (events && events.length ? events : (events===null ? DEFAULT_EVENTS : []));
+const upcoming = () => allEvents().filter(e=>!isPast(e)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+const past = () => allEvents().filter(isPast).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+const $ = id => document.getElementById(id);
+const statusEl = document.getElementById("status");
+const setStatus = (t,warn) => { statusEl.textContent = t; statusEl.classList.toggle("warn",!!warn); };
+
+/* ====== Glabātuve: Claude priekšskatījums (db) / Netlify (API) / demo ====== */
+const store = {
+  mode: "local", needsPin: false, canAdmin: true,
+  async save(k,v){ if(v) state[k]=v; else delete state[k]; },
+  async saveEvent(ev){ events = [...allEvents().filter(e=>e.id!==ev.id), ev]; },
+  async deleteEvent(id){ events = allEvents().filter(e=>e.id!==id); },
+  async checkPin(){ return true; },
+};
+
+async function initClaudeDb(){
+  if (!(window.claude && typeof window.claude.use === "function")) return false;
+  const db = await window.claude.use("db").catch(()=>null);
+  if (!db) return false;
+  const att = db.collection("att"), evs = db.collection("events");
+  store.mode = "claude";
+  try{ const u = await window.claude.use("user"); if (u) store.canAdmin = !!(await u.isOwner()); }catch{}
+  store.save = async (k,v) => { const ref = att.doc(k); if (v) await ref.set({ s: v }); else await ref.delete(); };
+  store.saveEvent = async ev => { await evs.doc(ev.id).set(ev); };
+  store.deleteEvent = async id => { await evs.doc(id).delete(); };
+  let ok1=false, ok2=false;
+  const timer = setTimeout(()=>setStatus("Dati vēl nav sasniedzami — mēģini vēlreiz pēc brīža.",true),10000);
+  const done = () => { if(ok1&&ok2){ clearTimeout(timer); setStatus("Atzīmes saglabājas automātiski un ir redzamas visiem."); } };
+  const fail = err => { clearTimeout(timer); setStatus("Neizdevās ielādēt datus ("+err.code+").",true); };
+  att.onSnapshot(snap => {
+    const next = {};
+    snap.docs.forEach(d => { const s = d.data()?.s; if (s==="tiek"||s==="netiek") next[d.id]=s; });
+    state = next; if(!snap.metadata.fromCache){ ok1=true; done(); } render();
+  }, fail);
+  evs.onSnapshot(snap => {
+    events = snap.empty ? (snap.metadata.fromCache ? events : null) : snap.docs.map(d=>cleanEv({ ...d.data(), id:d.id }));
+    if(!snap.metadata.fromCache){ ok2=true; done(); } render();
+  }, fail);
+  return true;
+}
+
+async function api(path, body){
+  const r = await fetch(path, body ? {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)} : {cache:"no-store",headers: adminPin ? {"x-admin-pin": adminPin} : {}});
+  if (r.status===401) throw new Error("pin");
+  if (!r.ok) throw new Error("http");
+  return r.json();
+}
+async function initNetlify(){
+  try{
+    const [a, e] = await Promise.all([api("/api/attendance"), api("/api/events")]);
+    state = a; events = e.length ? e.map(cleanEv) : null;
+  }catch{ return false; }
+  store.mode = "netlify"; store.needsPin = true;
+  store.save = async (k,v) => { await api("/api/attendance",{key:k,status:v||null}); if (v) state[k]=v; else delete state[k]; };
+  store.saveEvent = async ev => { await api("/api/events",{pin:adminPin,action:"save",event:ev}); events = [...allEvents().filter(e=>e.id!==ev.id), ev]; };
+  store.deleteEvent = async id => { await api("/api/events",{pin:adminPin,action:"delete",id}); events = allEvents().filter(e=>e.id!==id); };
+  store.checkPin = async pin => { try{ await api("/api/events",{pin,action:"check"}); return true; }catch{ return false; } };
+  setStatus("Atzīmes saglabājas automātiski un ir redzamas visiem.");
+  setInterval(async()=>{ if(pending.size||savingEvents()||document.hidden||!document.getElementById("ev-modal").hidden) return;
+    try{ const [a,e]=await Promise.all([api("/api/attendance"),api("/api/events")]); state=a; events=e.length?e.map(cleanEv):null; render(); }catch{}
+  },20000);
+  return true;
+}
+
+/* ====== Programmas dokuments: drošs HTML ====== */
+const OK_TAGS = new Set(["P","H1","H2","H3","H4","H5","H6","STRONG","B","EM","I","U","BR","UL","OL","LI","TABLE","THEAD","TBODY","TR","TD","TH","SUP","SUB"]);
+function sanitizeHtml(html){
+  const doc = new DOMParser().parseFromString("<div>"+html+"</div>","text/html");
+  const walk = node => {
+    for (const ch of [...node.childNodes]){
+      if (ch.nodeType===3) continue;
+      if (ch.nodeType!==1){ ch.remove(); continue; }
+      walk(ch);
+      if (!OK_TAGS.has(ch.tagName)){ ch.replaceWith(...ch.childNodes); continue; }
+      for (const a of [...ch.attributes]) if (!["colspan","rowspan"].includes(a.name)) ch.removeAttribute(a.name);
+    }
+  };
+  const root = doc.body.firstChild; walk(root);
+  root.querySelectorAll("tr").forEach(tr=>{ if (/vektors\s*d(?![a-zāčēģīķļņšūž])/i.test(tr.textContent)) tr.className="ours"; });
+  return root.innerHTML;
+}
+function openProgram(evId){
+  const ev = allEvents().find(e=>e.id===evId); if(!ev||!ev.program) return;
+  $("prog-title").textContent = ev.program.name || "Programma";
+  $("prog-body").innerHTML = sanitizeHtml(ev.program.html);
+  $("prog-modal").hidden = false; $("prog-body").scrollTop = 0;
+}
+const progBtn = ev => ev.program ? `<button class="prog-btn" data-prog="${esc(ev.id)}">📄 Koncerta programma</button>` : "";
+document.addEventListener("click", e=>{ const b = e.target.closest("[data-prog]"); if (b){ e.stopPropagation(); openProgram(b.dataset.prog); } }, true);
+
+/* ====== Atzīmes ====== */
+async function setMark(evId, mId, value){
+  const k = key(evId,mId);
+  if (pending.has(k)) return;
+  const prev = state[k];
+  const next = prev === value ? null : value;
+  pending.add(k);
+  if (next) state[k]=next; else delete state[k];
+  render();
+  try{ await store.save(k,next); }
+  catch(e){
+    if (prev) state[k]=prev; else delete state[k];
+    setStatus("Neizdevās saglabāt — pārbaudi interneta savienojumu un mēģini vēlreiz.",true);
+  }
+  pending.delete(k);
+  render();
+}
+
+/* ====== Skats: mana atzīmēšanās ====== */
+const whoSel = document.getElementById("who");
+for (const g of ["d","k"]){
+  const og = document.createElement("optgroup"); og.label = GROUP_NAME[g];
+  people.filter(p=>p.g===g).forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent=p.name; og.appendChild(o); });
+  whoSel.appendChild(og);
+}
+try{ const saved = localStorage.getItem("vektors-de-who"); if (saved && byId[saved]) whoSel.value = saved; }catch{}
+function showWho(){
+  const p = byId[whoSel.value];
+  $("who-set").hidden = !p; $("who-pick").hidden = !!p;
+  if (p) $("who-name").textContent = p.name;
+}
+whoSel.addEventListener("change",()=>{ try{ localStorage.setItem("vektors-de-who",whoSel.value); }catch{} showWho(); render(); });
+document.getElementById("who-change").onclick = () => { $("who-set").hidden = true; $("who-pick").hidden = false; whoSel.value = ""; render(); whoSel.focus(); };
+
+function tally(ev, g){
+  const list = people.filter(p=>!g||g==="all"||p.g===g);
+  let y=0,n=0; list.forEach(p=>{ const s=state[key(ev.id,p.id)]; if(s==="tiek")y++; else if(s==="netiek")n++; });
+  return { y, n, none: list.length-y-n };
+}
+
+function infoBlock(ev, open){
+  if (!ev.info.trim()) return "";
+  const short = ev.info.length < 160 && ev.info.split("\n").length <= 3;
+  return short ? `<div class="info">${esc(ev.info)}</div>`
+               : `<details class="more" ${open?"open":""}><summary>Informācija</summary><div class="info">${esc(ev.info)}</div></details>`;
+}
+
+function renderMine(){
+  const box = document.getElementById("my-events");
+  const me = whoSel.value;
+  const card = (ev, i, isUp) => {
+    const s = me ? state[key(ev.id,me)] : null;
+    const t = tally(ev);
+    const busy = me && pending.has(key(ev.id,me));
+    const open = openCards.has(ev.id);
+    return `<div class="ev ${isPast(ev)?"past":""} ${open?"open":""}">
+      <div class="ev-toggle" data-toggle="${esc(ev.id)}" role="button" tabindex="0" aria-expanded="${open}">
+        <div class="head">
+          <div><span class="date">${fmtDate(ev.date)}</span> <span class="meta">${fmtDay(ev.date)}${ev.time?" · "+esc(ev.time):""}</span></div>
+          <span class="kind ${esc(ev.kind)}">${esc(ev.kind)}</span>
+        </div>
+        <div class="placerow">${ev.place?`<span class="meta">📍 ${esc(ev.place)}</span>`:"<span></span>"}<span class="chev">${open?"Mazāk ▴":"Vairāk ▾"}</span></div>
+      </div>
+      ${open ? `<div class="ev-more">
+        ${admin?`<div><button class="edit-btn" data-edit="${esc(ev.id)}">Labot pasākumu</button></div>`:""}
+        ${ev.title && ev.title!==ev.kind ? `<div class="title">${esc(ev.title)}</div>` : ""}
+        ${ev.info.trim() ? `<div class="info">${esc(ev.info)}</div>` : ""}
+        ${progBtn(ev)}
+        ${ev.dances.length ? `<div class="program"><div class="program-h">Dejas</div><ol>${ev.dances.map(d=>`<li>${esc(d.name)}</li>`).join("")}</ol></div>` : ""}
+        <div class="tally"><b class="y">${t.y}</b> tiek · <b class="n">${t.n}</b> netiek · ${t.none} nav atzīmējušies</div>
+        <button class="link-btn" data-sum="${esc(ev.id)}">Kopsavilkums${admin&&ev.dances.length?" un dejas ("+ev.dances.length+")":""} →</button>
+      </div>` : ""}
+      ${me ? `<div class="choice">
+        <button class="yes" data-ev="${esc(ev.id)}" data-v="tiek" aria-pressed="${s==="tiek"}" ${busy?"disabled":""}>✓ Tieku</button>
+        <button class="no" data-ev="${esc(ev.id)}" data-v="netiek" aria-pressed="${s==="netiek"}" ${busy?"disabled":""}>✗ Netieku</button>
+      </div>` : `<div class="meta">Izvēlies savu vārdu augšā, lai atzīmētos.</div>`}
+    </div>`;
+  };
+  const up = upcoming(), pa = past();
+  $("n-up").textContent = "(" + up.length + ")"; $("n-past").textContent = "(" + pa.length + ")";
+  box.innerHTML = timeView==="up"
+    ? (up.length ? `<div class="events">${up.map((e,i)=>card(e,i,true)).join("")}</div>` : `<p class="empty">Nav gaidāmu pasākumu.</p>`)
+    : (pa.length ? `<div class="events">${pa.map((e,i)=>card(e,i,false)).join("")}</div>` : `<p class="empty">Vēl nav aizvadītu pasākumu.</p>`);
+}
+const openCards = new Set();
+document.getElementById("my-events").addEventListener("keydown",e=>{
+  const tg = e.target.closest("[data-toggle]");
+  if (tg && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); tg.click(); }
+});
+document.getElementById("my-events").addEventListener("click",e=>{
+  const ed = e.target.closest("button[data-edit]"); if (ed){ openEditor(ed.dataset.edit); return; }
+  const sm = e.target.closest("button[data-sum]"); if (sm){ location.hash = "p-" + sm.dataset.sum; return; }
+  const tg = e.target.closest("[data-toggle]");
+  if (tg){ const id = tg.dataset.toggle; if (openCards.has(id)) openCards.delete(id); else openCards.add(id); renderMine(); return; }
+  const b = e.target.closest("button[data-ev]"); if(!b||!whoSel.value) return;
+  setMark(b.dataset.ev, whoSel.value, b.dataset.v);
+});
+
+/* ====== Gaidāmie / Aizvadītie ====== */
+$("timetabs").addEventListener("click", e=>{
+  const b = e.target.closest("button[data-t]"); if(!b) return;
+  timeView = b.dataset.t;
+  document.querySelectorAll("#timetabs button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+  render();
+});
+
+/* ====== Skats: kopskats ====== */
+function renderGrid(){
+  const sorted = timeView==="up" ? upcoming() : past();
+  const grid = document.getElementById("grid");
+  if (!sorted.length){ grid.innerHTML = `<tbody><tr><td class="empty" style="text-align:left;padding:16px">${timeView==="up"?"Nav gaidāmu pasākumu.":"Vēl nav aizvadītu pasākumu."}</td></tr></tbody>`; return; }
+  const groups = group==="all" ? ["d","k"] : [group];
+  let h = `<thead><tr><th class="name">Dalībnieks</th>${sorted.map(ev=>{
+    const t = tally(ev, group);
+    const shortPlace = ev.place.split(/[,;\n]/)[0].trim();
+    return `<th title="${esc(evTitle(ev) + (ev.place ? " — " + ev.place : ""))}"><a class="evlink" href="#p-${esc(ev.id)}"><span class="d">${fmtDate(ev.date)}</span><span class="t">${esc(evTitle(ev))}</span>${shortPlace?`<span class="t pl">${esc(shortPlace)}</span>`:""}</a><span class="c"><b style="color:var(--green)">${t.y}</b> / <b style="color:var(--no)">${t.n}</b> / ${t.none}</span></th>`;
+  }).join("")}</tr></thead><tbody>`;
+  for (const g of groups){
+    if (groups.length>1) h += `<tr class="group ${g==="k"?"men":""}"><td colspan="${sorted.length+1}">${GROUP_NAME[g]}</td></tr>`;
+    for (const p of people.filter(p=>p.g===g)){
+      h += `<tr class="${p.g==="k"?"men":""}"><td class="name">${esc(p.name)}</td>${sorted.map(ev=>{
+        const s = state[key(ev.id,p.id)];
+        const sym = s==="tiek"?"✓":s==="netiek"?"✗":"—";
+        return admin
+          ? `<td class="cell"><button class="${s||""}" data-ev="${esc(ev.id)}" data-m="${p.id}" title="${esc(p.name)} — ${fmtDate(ev.date)}">${sym}</button></td>`
+          : `<td class="cell"><span class="ro ${s||""}">${sym}</span></td>`;
+      }).join("")}</tr>`;
+    }
+  }
+  grid.innerHTML = h + "</tbody>";
+  $("grid-hint").textContent = admin ? "Vadītāja režīms: klikšķis uz šūnas maina — → ✓ tiek → ✗ netiek → —" : "Lai atzīmētos, izmanto cilni „Mana atzīmēšanās”.";
+}
+document.getElementById("grid").addEventListener("click",e=>{
+  const b = e.target.closest("button[data-m]"); if(!b) return;
+  const cur = state[key(b.dataset.ev,b.dataset.m)];
+  const next = !cur ? "tiek" : cur==="tiek" ? "netiek" : null;
+  setMark(b.dataset.ev,b.dataset.m,next||cur);
+});
+document.getElementById("filters").addEventListener("click",e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  if (b.dataset.g){ group = b.dataset.g; document.querySelectorAll("#filters button[data-g]").forEach(x=>x.setAttribute("aria-pressed",x===b)); }
+  else return;
+  renderGrid();
+});
+
+/* ====== Vadītāja režīms un pasākumu labošana ====== */
+function setAdmin(on){
+  admin = on; $("admin-bar").hidden = !on;
+  if (store.mode==="netlify") api("/api/events").then(e=>{ events = e.length ? e.map(cleanEv) : null; render(); }).catch(()=>{});
+  $("admin-toggle").textContent = on ? "Iziet no vadītāja režīma" : "Vadītāja režīms";
+  if (typeof updateAsMemberLink==="function") try{ updateAsMemberLink(); }catch{}
+  try{ if(on){ sessionStorage.setItem("vektors-de-pin",adminPin); localStorage.setItem("vektors-de-admin","1"); } else { sessionStorage.removeItem("vektors-de-pin"); localStorage.removeItem("vektors-de-admin"); } }catch{}
+  render();
+}
+function enterAdmin(){
+  if (!store.canAdmin){ setStatus("Dejas un sastāvus var labot tikai vadītāja.",true); return; }
+  if (!store.needsPin){ setAdmin(true); return; }
+  $("pin-err").textContent=""; $("f-pin").value=""; $("pin-modal").hidden=false; $("f-pin").focus();
+}
+$("admin-toggle").onclick = () => {
+  if (admin){ adminPin=""; setAdmin(false); return; }
+  enterAdmin();
+};
+$("pin-cancel").onclick = () => { $("pin-modal").hidden = true; };
+$("pin-form").onsubmit = async e => {
+  e.preventDefault();
+  const pin = $("f-pin").value.trim();
+  if (await store.checkPin(pin)){ adminPin = pin; $("pin-modal").hidden = true; setAdmin(true); }
+  else $("pin-err").textContent = "Nepareizs PIN kods.";
+};
+
+let editingId = null, editProgram = null;
+function showProgState(){
+  $("prog-state").textContent = editProgram ? "Pievienota: " + editProgram.name : "Nav pievienota.";
+  $("prog-remove").hidden = !editProgram;
+}
+$("prog-remove").onclick = () => { editProgram = null; $("f-prog").value = ""; showProgState(); };
+let mammothP = null;
+const loadMammoth = () => mammothP ||= new Promise((res,rej)=>{ const sc=document.createElement("script"); sc.src="https://cdn.jsdelivr.net/npm/mammoth@1.13.0/mammoth.browser.min.js"; sc.onload=()=>res(window.mammoth); sc.onerror=()=>{ mammothP=null; rej(new Error("load")); }; document.head.appendChild(sc); });
+$("f-prog").addEventListener("change", async e=>{
+  const f = e.target.files[0]; if (!f) return;
+  $("prog-state").textContent = "Apstrādā…";
+  try{
+    const m = await loadMammoth();
+    const r = await m.convertToHtml({ arrayBuffer: await f.arrayBuffer() }, { convertImage: m.images.imgElement(()=>Promise.resolve({ src: "" })) });
+    const html = sanitizeHtml(r.value);
+    if (html.length > 250000) throw new Error("big");
+    editProgram = { name: f.name.replace(/\.docx$/i,"").replace(/^[0-9a-f]{8}-/,"").replace(/_/g," "), html };
+    showProgState();
+  }catch(err){ $("prog-state").textContent = err.message==="big" ? "Dokuments ir par lielu." : "Neizdevās nolasīt dokumentu."; }
+});
+function openEditor(id){
+  editingId = id;
+  const ev = id ? allEvents().find(e=>e.id===id) : null;
+  editProgram = ev?.program || null; $("f-prog").value = ""; showProgState();
+  $("ev-form-title").textContent = ev ? "Labot pasākumu" : "Jauns pasākums";
+  $("f-date").value = ev?.date || localToday();
+  $("f-time").value = ev?.time || "";
+  $("f-kind").value = ev?.kind || "Mēģinājums";
+  $("f-place").value = ev?.place || "";
+  $("f-title").value = ev?.title || "";
+  $("f-info").value = ev?.info || "";
+  $("ev-del").hidden = !ev; $("del-confirm").hidden = true; $("ev-err").textContent = "";
+  $("ev-modal").hidden = false;
+}
+const closeEditor = () => { $("ev-modal").hidden = true; editingId = null; };
+$("add-ev").onclick = () => openEditor(null);
+$("ev-cancel").onclick = closeEditor;
+$("prog-close").onclick = () => { $("prog-modal").hidden = true; };
+$("prog-modal").addEventListener("click", e=>{ if (e.target.id==="prog-modal") $("prog-modal").hidden = true; });
+
+async function seedDefaultsIfNeeded(){
+  if (events !== null) return;              // pasākumi jau saglabāti
+  for (const ev of DEFAULT_EVENTS) await store.saveEvent(ev);
+  events = [...DEFAULT_EVENTS];
+}
+function busy(on){ ["ev-save","ev-del","ev-del-yes"].forEach(id=>$(id).disabled=on); }
+function saveErr(e){ $("ev-err").textContent = e.message==="pin" ? "PIN kods vairs nav derīgs — ieej vadītāja režīmā vēlreiz." : "Neizdevās saglabāt. Mēģini vēlreiz."; }
+
+$("ev-form").onsubmit = async e => {
+  e.preventDefault();
+  const date = $("f-date").value;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)){ $("ev-err").textContent = "Norādi datumu."; return; }
+  const ev = cleanEv({
+    id: editingId || ("e" + date.replace(/-/g,"") + "-" + Math.random().toString(36).slice(2,6)),
+    date, time: $("f-time").value.trim(), kind: $("f-kind").value,
+    title: $("f-title").value.trim(), place: $("f-place").value.trim(), info: $("f-info").value.replace(/\s+$/,""),
+    dances: (editingId && allEvents().find(x=>x.id===editingId)?.dances) || [],
+    program: editProgram,
+  });
+  busy(true);
+  try{ await seedDefaultsIfNeeded(); await store.saveEvent(ev); localUpsert(ev); closeEditor(); render(); }
+  catch(err){ saveErr(err); }
+  busy(false);
+};
+$("ev-del").onclick = () => { $("del-confirm").hidden = false; };
+$("ev-del-no").onclick = () => { $("del-confirm").hidden = true; };
+$("ev-del-yes").onclick = async () => {
+  busy(true);
+  try{ await seedDefaultsIfNeeded(); await store.deleteEvent(editingId); events = allEvents().filter(x=>x.id!==editingId); closeEditor(); if(location.hash.startsWith("#p-")) location.hash=""; render(); }
+  catch(err){ saveErr(err); }
+  busy(false);
+};
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeEditor(); $("pin-modal").hidden=true; $("prog-modal").hidden=true; } });
+
+/* ====== Pasākuma saglabāšana pa vienam (dejas, ķeksīši) ====== */
+function localUpsert(ev){ events = [...allEvents().filter(e=>e.id!==ev.id), ev]; }
+const evQueue = new Map();
+const savingEvents = () => [...evQueue.values()].some(q=>q.running);
+async function saveEventSerial(ev){
+  let q = evQueue.get(ev.id); if(!q){ q={running:false,next:null}; evQueue.set(ev.id,q); }
+  q.next = ev; if (q.running) return;
+  q.running = true;
+  try{ while(q.next){ const e=q.next; q.next=null; await store.saveEvent(e); } }
+  catch(err){ setStatus(err.message==="pin" ? "PIN kods vairs nav derīgs — ieej vadītāja režīmā vēlreiz." : "Neizdevās saglabāt dejas — mēģini vēlreiz.", true); }
+  finally{ q.running = false; }
+}
+async function mutateEvent(id, fn){
+  try{ await seedDefaultsIfNeeded(); }catch(err){ setStatus("Neizdevās saglabāt — mēģini vēlreiz.",true); return; }
+  const cur = allEvents().find(e=>e.id===id); if(!cur) return;
+  const next = cleanEv(JSON.parse(JSON.stringify(cur)));
+  fn(next);
+  localUpsert(next); render();
+  saveEventSerial(next);
+}
+
+/* ====== Skats: pasākuma kopsavilkums ====== */
+let castOnlyComing = false;
+const pendingDel = new Set();
+function renderSummary(){
+  const box = $("view-ev");
+  if (box.hidden) return;
+  const id = location.hash.slice(3);
+  const ev = allEvents().find(e=>e.id===id);
+  if (!ev){ box.innerHTML = `<div class="back"><button class="link-btn" data-back>← Atpakaļ</button></div><p class="empty">Pasākums nav atrasts.</p>`; return; }
+  const t = tally(ev);
+  const st = p => state[key(ev.id,p.id)] || "none";
+  const col = (cls, title, filter) => {
+    const lists = ["d","k"].map(g=>{ const ps = people.filter(p=>p.g===g && filter(st(p))); return ps.length ? `<h4>${GROUP_NAME[g]} · ${ps.length}</h4><ul>${ps.map(p=>`<li>${esc(p.name)}</li>`).join("")}</ul>` : ""; }).join("");
+    return `<div class="att-col ${cls}"><h3>${title}</h3>${lists || '<p class="muted">—</p>'}</div>`;
+  };
+  // deju tabula
+  const D = ev.dances;
+  let castHtml = "";
+  if (D.length && !admin){
+    const me = whoSel.value;
+    const nameLi = id => { const p = byId[id]; if(!p) return ""; const s2 = st(p);
+      return `<li class="${s2==="netiek"?"out":""} ${id===me?"me":""}">${esc(p.name)}${s2==="netiek"?' <span class="outtag">✗ netiek</span>':""}</li>`; };
+    castHtml = `<div class="dance-cards">${D.map((d,i)=>{
+      const ds = people.filter(p=>p.g==="d" && d.cast.includes(p.id)).map(p=>p.id);
+      const ks = people.filter(p=>p.g==="k" && d.cast.includes(p.id)).map(p=>p.id);
+      return `<div class="dance-card ${d.cast.includes(me)?"mine":""}">
+        <h3><span class="muted">${i+1}.</span> ${esc(d.name)||"<i>bez nosaukuma</i>"}</h3>
+        ${!ds.length && !ks.length ? '<p class="muted">Sastāvs vēl nav noteikts.</p>' : ""}
+        ${ds.length ? `<h4>Dāmas · ${ds.length}</h4><ul>${ds.map(nameLi).join("")}</ul>` : ""}
+        ${ks.length ? `<h4 class="men">Kungi · ${ks.length}</h4><ul>${ks.map(nameLi).join("")}</ul>` : ""}
+      </div>`;
+    }).join("")}</div>`;
+  } else if (D.length){
+    const rowsFor = g => people.filter(p=>p.g===g && (!castOnlyComing || st(p)==="tiek"));
+    let h = `<thead><tr><th class="name">Dejotājs</th>${D.map(d=>{
+      const c = { d:d.cast.filter(x=>byId[x]?.g==="d").length, k:d.cast.filter(x=>byId[x]?.g==="k").length };
+      return `<th>${esc(d.name)||"<i>bez nosaukuma</i>"}<span class="cnt">${c.d} ${lvN(c.d,"dāma","dāmas")} · ${c.k} ${lvN(c.k,"kungs","kungi")}</span></th>`;
+    }).join("")}</tr></thead><tbody>`;
+    for (const g of ["d","k"]){
+      const ps = rowsFor(g); if(!ps.length) continue;
+      h += `<tr class="group ${g==="k"?"men":""}"><td colspan="${D.length+1}">${GROUP_NAME[g]}</td></tr>`;
+      for (const p of ps){
+        const s = st(p);
+        h += `<tr class="${p.g==="k"?"men":""} ${s==="netiek"?"row-warn":""}"><td class="name"><span class="st ${s}" title="${s==="tiek"?"tiek":s==="netiek"?"netiek":"nav atzīmējies"}">${s==="tiek"?"✓":s==="netiek"?"✗":"·"}</span> ${esc(p.name)}</td>${D.map(d=>{
+          const on = d.cast.includes(p.id);
+          const warn = on && s==="netiek";
+          return admin
+            ? `<td class="${warn?"warn":""}"><input type="checkbox" data-cast="${esc(d.id)}" data-m="${p.id}" ${on?"checked":""} aria-label="${esc(p.name)} — ${esc(d.name)}"></td>`
+            : `<td class="${on?"on":""} ${warn?"warn":""}">${on?"●":""}</td>`;
+        }).join("")}</tr>`;
+      }
+    }
+    const toReplace = people.filter(p=>st(p)==="netiek").map(p=>({ p, ds: D.filter(d=>d.cast.includes(p.id)) })).filter(x=>x.ds.length);
+    const replaceHtml = toReplace.length ? `<div class="replace-box"><b>Jāatrod aizvietotājs (${toReplace.length}):</b><ul>${toReplace.map(x=>`<li>${esc(x.p.name)} — ${x.ds.map(d=>esc(d.name)).join(", ")}</li>`).join("")}</ul></div>` : "";
+    castHtml = replaceHtml + `<div style="margin:10px 0"><label class="chk"><input type="checkbox" id="only-coming" ${castOnlyComing?"checked":""}> Rādīt tikai tos, kas tiek</label></div>
+      <div class="tablebox"><table class="cast">${h}</tbody></table></div>
+      <p class="hint">✓ tiek · ✗ netiek · · nav atzīmējies. Sarkana rinda — dejotājs atzīmējis, ka netiek; tumšāka šūna — viņš ir šīs dejas sastāvā un jāaizvieto.</p>`;
+  } else castHtml = `<p class="empty">${admin ? "Vēl nav pievienota neviena deja. Pievieno tās augšā." : "Dejas vēl nav pievienotas."}</p>`;
+
+  const danceEditor = admin ? `<div class="card" style="margin-top:10px">
+      <div class="dance-list">${D.map((d,i)=>`<div class="dance-row">
+        <span class="muted" style="width:20px;text-align:right">${i+1}.</span>
+        <input value="${esc(d.name)}" data-rename="${esc(d.id)}" aria-label="Dejas nosaukums">
+        <button data-up="${esc(d.id)}" ${i===0?"disabled":""} title="Uz augšu">↑</button>
+        <button data-down="${esc(d.id)}" ${i===D.length-1?"disabled":""} title="Uz leju">↓</button>
+        ${pendingDel.has(d.id) ? `<button class="confirm" data-del="${esc(d.id)}">Dzēst?</button>` : `<button data-del="${esc(d.id)}" title="Dzēst">✕</button>`}
+      </div>`).join("")}</div>
+      <form class="add-dance" id="add-dance"><input id="new-dance" placeholder="Dejas nosaukums, piem., „Tur lustīgi”"><button class="btn" type="submit">Pievienot deju</button></form>
+    </div>` : "";
+
+  // saglabā ritināšanas vietu un fokusu, lai saraksts nelēkā pēc katra ķeksīša
+  const oldBox = box.querySelector(".tablebox");
+  const keep = { top: oldBox?.scrollTop||0, left: oldBox?.scrollLeft||0, y: window.scrollY, sameEv: box.dataset.ev===ev.id };
+  const fa = document.activeElement;
+  const focusSel = fa && box.contains(fa) && fa.dataset.cast ? `input[data-cast="${fa.dataset.cast}"][data-m="${fa.dataset.m}"]` : null;
+  box.dataset.ev = ev.id;
+  box.innerHTML = `
+    <div class="back"><button class="link-btn" data-back>← Atpakaļ</button></div>
+    <div class="sum-head">
+      <div class="head" style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+        <div><span class="date">${fmtDate(ev.date)}</span> <span class="meta">${fmtDay(ev.date)}${ev.time?" · "+esc(ev.time):""}</span></div>
+        <div style="display:flex;gap:6px;align-items:center"><span class="kind ${esc(ev.kind)}">${esc(ev.kind)}</span>${admin?`<button class="edit-btn" data-edit="${esc(ev.id)}">Labot</button>`:""}</div>
+      </div>
+      <h2>${esc(evTitle(ev))}</h2>
+      ${ev.place?`<div class="meta">📍 ${esc(ev.place)}</div>`:""}
+      ${ev.info.trim()?`<div class="info" style="margin-top:10px">${esc(ev.info)}</div>`:""}
+      ${ev.program?`<div style="margin-top:12px">${progBtn(ev)}</div>`:""}
+    </div>
+    ${!admin && D.length ? `<h2 class="sec">Dejas <small>${D.length}</small></h2><div class="card program" style="margin-top:10px"><ol>${D.map(d=>`<li>${esc(d.name)}</li>`).join("")}</ol></div>` : ""}
+    ${admin ? `<h2 class="sec">Dejas <small>${D.length}</small></h2>
+    ${danceEditor}
+    ${castHtml}` : (store.canAdmin && !store.needsPin ? `<div style="margin-top:18px"><button class="edit-btn" data-enter-admin>Labot dejas un sastāvus</button></div>` : "")}
+    <h2 class="sec">Apmeklējums <small><b style="color:var(--green)">${t.y}</b> tiek · <b style="color:var(--no)">${t.n}</b> netiek · ${t.none} nav atzīmējušies</small></h2>
+    <div class="att-cols">
+      ${col("y","Tiek",s=>s==="tiek")}
+      ${col("n","Netiek",s=>s==="netiek")}
+      ${col("z","Nav atzīmējušies",s=>s==="none")}
+    </div>`;
+  if (keep.sameEv){
+    const nb = box.querySelector(".tablebox");
+    if (nb){ nb.scrollTop = keep.top; nb.scrollLeft = keep.left; }
+    window.scrollTo(0, keep.y);
+    if (focusSel){ const f = box.querySelector(focusSel); if (f) f.focus({preventScroll:true}); }
+  }
+}
+$("view-ev").addEventListener("click", e=>{
+  const id = location.hash.slice(3);
+  if (e.target.closest("[data-back]")){ location.hash = ""; return; }
+  if (e.target.closest("[data-enter-admin]")){ enterAdmin(); return; }
+  const ed = e.target.closest("button[data-edit]"); if (ed){ openEditor(ed.dataset.edit); return; }
+  const up = e.target.closest("button[data-up]"), dn = e.target.closest("button[data-down]");
+  if (up || dn){
+    const did = (up||dn).dataset.up || (up||dn).dataset.down;
+    mutateEvent(id, ev=>{ const i = ev.dances.findIndex(d=>d.id===did); const j = up ? i-1 : i+1; if(i<0||j<0||j>=ev.dances.length) return; [ev.dances[i],ev.dances[j]]=[ev.dances[j],ev.dances[i]]; });
+    return;
+  }
+  const del = e.target.closest("button[data-del]");
+  if (del){
+    const did = del.dataset.del;
+    if (!pendingDel.has(did)){ pendingDel.add(did); renderSummary(); setTimeout(()=>{ pendingDel.delete(did); renderSummary(); },4000); return; }
+    pendingDel.delete(did);
+    mutateEvent(id, ev=>{ ev.dances = ev.dances.filter(d=>d.id!==did); });
+  }
+});
+$("view-ev").addEventListener("change", e=>{
+  const id = location.hash.slice(3);
+  if (e.target.id==="only-coming"){ castOnlyComing = e.target.checked; renderSummary(); return; }
+  const cb = e.target.closest("input[data-cast]");
+  if (cb){ const did = cb.dataset.cast, m = cb.dataset.m, on = cb.checked;
+    mutateEvent(id, ev=>{ const d = ev.dances.find(x=>x.id===did); if(!d) return; d.cast = d.cast.filter(x=>x!==m); if(on) d.cast.push(m); });
+    return; }
+  const rn = e.target.closest("input[data-rename]");
+  if (rn){ const did = rn.dataset.rename, name = rn.value.trim();
+    mutateEvent(id, ev=>{ const d = ev.dances.find(x=>x.id===did); if(d) d.name = name; }); }
+});
+$("view-ev").addEventListener("submit", e=>{
+  if (e.target.id!=="add-dance") return;
+  e.preventDefault();
+  const name = $("new-dance").value.trim(); if(!name) return;
+  const id = location.hash.slice(3);
+  mutateEvent(id, ev=>{ ev.dances.push({ id: "d" + Date.now().toString(36) + Math.random().toString(36).slice(2,5), name, cast: [] }); });
+  setTimeout(()=>{ const i=$("new-dance"); if(i) i.focus(); },0);
+});
+
+/* ====== Skatīt kā dalībnieks (tikai vadītājai) ====== */
+let savedCanAdmin = null;
+function updateAsMemberLink(){ $("asmember-wrap").hidden = !store.canAdmin || savedCanAdmin!==null; }
+$("asmember").onclick = () => {
+  savedCanAdmin = store.canAdmin; 
+  admin = false; $("admin-bar").hidden = true; store.canAdmin = false;
+  $("admin-toggle").hidden = true; $("asmember-wrap").hidden = true; $("asmember-bar").hidden = false;
+  render(); window.scrollTo(0,0);
+};
+$("asmember-off").onclick = () => {
+  store.canAdmin = savedCanAdmin; savedCanAdmin = null;
+  $("admin-toggle").hidden = !store.canAdmin; $("asmember-bar").hidden = true;
+  try{ if (localStorage.getItem("vektors-de-admin")==="1") { setAdmin(true); } }catch{}
+  updateAsMemberLink(); render();
+};
+
+/* ====== Cilnes un maršruti ====== */
+const tabs = { me: $("tab-me"), all: $("tab-all") };
+let lastTab = "me";
+function show(which){
+  if (which!=="ev") lastTab = which;
+  tabs.me.setAttribute("aria-pressed",which==="me"); tabs.all.setAttribute("aria-pressed",which==="all");
+  $("view-me").hidden = which!=="me"; $("view-all").hidden = which!=="all"; $("view-ev").hidden = which!=="ev";
+  $("timetabs").hidden = which==="ev";
+  if (which==="ev"){ renderSummary(); window.scrollTo(0,0); }
+}
+tabs.me.onclick = ()=>{ if(location.hash) location.hash=""; show("me"); };
+tabs.all.onclick = ()=>{ lastTab="all"; if(location.hash) location.hash=""; show("all"); };
+function route(){ if (location.hash.startsWith("#p-")) show("ev"); else show(lastTab); }
+window.addEventListener("hashchange", route);
+
+function render(){
+  renderMine(); renderGrid();
+  // nepārzīmē kopsavilkumu, kamēr raksta dejas nosaukumu
+  const a = document.activeElement;
+  if (!(a && $("view-ev").contains(a) && a.tagName==="INPUT" && a.type==="text")) renderSummary();
+}
+showWho(); render(); route();
+
+(async ()=>{
+  if (await initClaudeDb()){
+    if (!store.canAdmin) $("admin-toggle").hidden = true;
+    else { try{ if (localStorage.getItem("vektors-de-admin")==="1") setAdmin(true); }catch{} }
+    updateAsMemberLink(); render();
+    return;
+  }
+  if (await initNetlify()){
+    try{ const p = sessionStorage.getItem("vektors-de-pin"); if (p && await store.checkPin(p)){ adminPin = p; setAdmin(true); } }catch{}
+    render(); return;
+  }
+  setStatus("Demo režīms: izmaiņas netiek saglabātas (nav savienojuma ar serveri).",true);
+  updateAsMemberLink();
+})();
+</script>
+</body>
+</html>
