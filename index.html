@@ -302,7 +302,7 @@ const DEFAULT_EVENTS = [
 /* ====== Dalībnieki ====== */
 const MEMBERS = {
   d: ["Ance Beinaroviča","Anete Bindemane","Diāna Rutks","Ieva Ozola","Ieva Auziņa","Ieva Lūkina","Ilze Seipule","Ilze Šimanska","Ingrīda Sorokina","Iveta Auziņa","Liene Vigule","Līna Puga","Linda Popena","Līva Zorgenfreija","Līva Kānīte","Santa Latkovska-Babre","Trīna Kļava","Zane Skrastiņa","Baiba Stikāne"],
-  k: ["Aldis Voitenko","Andris Broks","Andris Seipulis","Arvis Bērziņš","Didzis Lūkins","Edgars Krieviņš","Edgars Zēbergs","Emīls Ziediņš","Enriko Ķēniņš","Ģirts Patriks Kronbergs","Jānis Auziņš","Māris Auziņš","Māris Kānītis","Pēteris Puga","Rihards Kadiķis","Sergejs Ivanovs","Valters Skrastiņš","Gatis Šimanaskis","Arturs Jurgelāns","Krišjānis Kaminskis","Mārcis Kaksis"],
+  k: ["Aldis Voitenko","Andris Broks","Andris Seipulis","Arvis Bērziņš","Didzis Lūkins","Edgars Krieviņš","Edgars Zēbergs","Emīls Ziediņš","Enriko Ķēniņš","Ģirts Patriks Kronbergs","Jānis Auziņš","Māris Auziņš","Māris Kānītis","Pēteris Puga","Rihards Kadiķis","Sergejs Ivanovs","Valters Skrastiņš","Gatis Šimanskis","Arturs Jurgelāns","Krišjānis Kaminskis","Mārcis Kaksis"],
 };
 /* ==================================================================== */
 
@@ -311,7 +311,9 @@ const GROUP_NAME = { d: "Dāmas", k: "Kungi" };
 const slug = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"").toLowerCase();
 const collator = new Intl.Collator("lv");
 const people = [];
-for (const g of ["d","k"]) [...MEMBERS[g]].sort(collator.compare).forEach(name=>people.push({ id: g + "-" + slug(name), name, g }));
+// Ja dalībnieka vārds tiek labots, šeit saglabā veco identifikatoru, lai nepazustu viņa atzīmes un deju ķeksīši
+const ID_OVERRIDE = { "Gatis Šimanskis": "k-gatis-simanaskis" };
+for (const g of ["d","k"]) [...MEMBERS[g]].sort(collator.compare).forEach(name=>people.push({ id: ID_OVERRIDE[name] || (g + "-" + slug(name)), name, g }));
 const byId = Object.fromEntries(people.map(p=>[p.id,p]));
 const key = (ev,m) => ev + "__" + m;
 const localToday = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
